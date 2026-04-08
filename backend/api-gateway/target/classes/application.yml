@@ -1,0 +1,35 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+      routes:
+        - id: pet-service
+          uri: ${PET_SERVICE_URL:http://pet-service:3001}
+          predicates:
+            - Path=/api/pets/**
+          filters:
+            - RewritePath=/api/pets/(?<segment>.*), /$\{segment}
+        
+        - id: geo-service
+          uri: ${GEO_SERVICE_URL:http://geo-service:3002}
+          predicates:
+            - Path=/api/geo/**
+          filters:
+            - RewritePath=/api/geo/(?<segment>.*), /$\{segment}
+        
+        - id: match-service
+          uri: ${MATCH_SERVICE_URL:http://match-service:3003}
+          predicates:
+            - Path=/api/match/**
+          filters:
+            - RewritePath=/api/match/(?<segment>.*), /$\{segment}
