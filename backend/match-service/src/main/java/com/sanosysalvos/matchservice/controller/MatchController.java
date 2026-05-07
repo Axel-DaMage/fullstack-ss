@@ -1,71 +1,91 @@
 package com.sanosysalvos.matchservice.controller;
 
-import com.sanosysalvos.matchservice.service.PetServiceConsumer;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sanosysalvos.matchservice.model.Match;
+import com.sanosysalvos.matchservice.service.MatchingService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/matching")
 public class MatchController {
 
-    @Autowired
-    private PetServiceConsumer consumer;
+    private final MatchingService matchingService;
 
-    @GetMapping("/health")
-    public String health() {
-        return "Match Service is running";
+    public MatchController(MatchingService matchingService) {
+        this.matchingService = matchingService;
     }
 
-    @GetMapping("/analyze")
-    public ResponseEntity<Map<String, Object>> analyze() {
-        List<Map<String, Object>> reports = consumer.getPetReports();
+    @GetMapping
+    public ResponseEntity<List<Match>> getAllMatches() {
+        return ResponseEntity.ok(matchingService.getAllMatches());
+    }
 
-        if (reports != null && !reports.isEmpty() && reports.get(0).containsKey("error")) {
-            // Evaluamos si el fallback se ejecutó
-            Map<String, Object> errResponse = new HashMap<>();
-            errResponse.put("error", reports.get(0).get("error"));
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(errResponse);
+    @GetMapping("/{id}")
+    public ResponseEntity<Match> getMatchById(@PathVariable Long id) {
+        return matchingService.getMatchById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<Match> createMatch(@RequestBody Map<String, Long> request) {
+        Long petLostId = request.get("petLostId");
+        Long petFoundId = request.get("petFoundId");
+        if (petLostId == null || petFoundId == null) {
+            return ResponseEntity.badRequest().build();
         }
+        Match createdMatch = matchingService.createMatch(petLostId, petFoundId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdMatch);
+    }
 
-        if (reports == null) {
-            reports = new ArrayList<>();
+    @PutMapping("/{id}")
+    public ResponseEntity<Match> updateMatchStatus(@PathVariable Long id, @RequestBody Map<String, String> request) {
+        String status = request.get("status");
+        if (status == null) {
+            return ResponseEntity.badRequest().build();
         }
-
-        List<Map<String, Object>> lost = reports.stream()
-                .filter(r -> "LOST".equals(r.get("type")))
-                .collect(Collectors.toList());
-
-        List<Map<String, Object>> found = reports.stream()
-                .filter(r -> "FOUND".equals(r.get("type")))
-                .collect(Collectors.toList());
-
-        List<Map<String, Object>> potentialMatches = new ArrayList<>();
-
-        for (Map<String, Object> l : lost) {
-            for (Map<String, Object> f : found) {
-                if (l.getOrDefault("species", "L").equals(f.getOrDefault("species", "F")) &&
-                    l.getOrDefault("color", "L").equals(f.getOrDefault("color", "F"))) {
-                    
-                    Map<String, Object> match = new HashMap<>();
-                    match.put("lost", l);
-                    match.put("found", f);
-                    match.put("message", "Alta probabilidad");
-                    potentialMatches.add(match);
-                }
-            }
+        try {
+            Match updatedMatch = matchingService.updateMatchStatus(id, status);
+            return ResponseEntity.ok(updatedMatch);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
+    }
 
-        Map<String, Object> response = new HashMap<>();
-        response.put("potentialMatches", potentialMatches);
-        
-        return ResponseEntity.ok(response);
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteMatch(@PathVariable Long id) {
+        try {
+            matchingService.deleteMatch(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/search/status/{status}")
+    public ResponseEntity<List<Match>> getMatchesByStatus(@PathVariable String status) {
+        return ResponseEntity.ok(matchingService.getMatchesByStatus(status));
+    }
+
+    @GetMapping("/search/percentage/{percentage}")
+    public ResponseEntity<List<Match>> getMatchesByPercentage(@PathVariable Integer percentage) {
+        return ResponseEntity.ok(matchingService.getMatchesByPercentage(percentage));
+    }
+
+    @GetMapping("/totals/status")
+    public ResponseEntity<Map<String, Long>> getTotalsByStatus() {
+        long pendingCount = matchingService.countMatchesByStatus("PENDING");
+        long confirmedCount = matchingService.countMatchesByStatus("CONFIRMED");
+        long rejectedCount = matchingService.countMatchesByStatus("REJECTED");
+        return ResponseEntity.ok(Map.of("pending", pendingCount, "confirmed", confirmedCount, "rejected", rejectedCount));
+    }
+
+    @PostMapping("/run-automatic")
+    public ResponseEntity<String> runAutomaticMatching() {
+        matchingService.runAutomaticMatching();
+        return ResponseEntity.ok("Automatic matching completed");
     }
 }

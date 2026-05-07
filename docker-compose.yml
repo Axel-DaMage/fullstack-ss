@@ -7,8 +7,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: sanosysalvos
-      MYSQL_USER: local_user
-      MYSQL_PASSWORD: local_password
+      MYSQL_USER: sanosysalvos
+      MYSQL_PASSWORD: sanosysalvos
     ports:
       - "3306:3306"
     volumes:
