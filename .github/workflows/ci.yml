@@ -1,4 +1,4 @@
-name: CI - Build & Test Pipeline
+name: CI - Pipeline de Compilación y Pruebas
 
 on:
   push:
