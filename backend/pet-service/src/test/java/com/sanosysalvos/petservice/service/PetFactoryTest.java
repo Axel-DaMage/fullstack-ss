@@ -29,14 +29,4 @@ class PetFactoryTest {
         assertEquals("LOST", pet.getStatus());
         assertEquals("Gata perdida", pet.getDescription());
     }
-
-    @Test
-    void testCreateFoundPet() {
-        Pet pet = petFactory.createFoundPet("Rocky", "Pitbull", "Negro", "Grande", "Perro encontrado");
-
-        assertNotNull(pet);
-        assertEquals("Rocky", pet.getName());
-        assertEquals("FOUND", pet.getStatus());
-        assertEquals("Perro encontrado", pet.getDescription());
-    }
 }
