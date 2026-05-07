@@ -33,111 +33,111 @@ Plataforma para gestionar el registro, búsqueda y reencontración de mascotas p
 ### Etapa 1: Fundamentos y Estructura (Semana 1-2)
 
 #### Objetivos Técnicos
-- [ ] Configurar repositorio principal en GitHub
-- [ ] Crear estructura de directorios para frontend y backend
+- [x] Configurar repositorio principal en GitHub
+- [x] Crear estructura de directorios para frontend y backend
 - [ ] Implementar arquetipos Maven para microservicios
-- [ ] Configurar API Gateway con Spring Cloud Gateway
+- [x] Configurar API Gateway con Spring Cloud Gateway
 
 #### Objetivos de Componentes
 - [ ] Component NPM para frontend
 - [ ] BFF (Backend For Frontend)
-- [ ] 3 microservicios base
+- [x] 3 microservicios base
 
 #### Patrones de Diseño a Implementar
-- [ ] Factory Method (para creación de entidades)
+- [x] Factory Method (para creación de entidades)
 - [ ] Singleton (para servicios de configuración)
-- [ ] Repository Pattern (capa de acceso a datos)
+- [x] Repository Pattern (capa de acceso a datos)
 
 #### Arquetipos y Arquitectura
 - [ ] Arquetipo Maven para BFF
 - [ ] Arquetipo Maven para microservicios
-- [ ] Patrón arquitectónico: Microservices
+- [x] Patrón arquitectónico: Microservices
 
 ---
 
 ### Etapa 2: Pet Service (Semana 3)
 
 #### Objetivos CRUD
-- [ ] **GET** - Obtener todas las mascotas
-- [ ] **GET** - Obtener mascota por ID
-- [ ] **POST** - Registrar nueva mascota
-- [ ] **PUT** - Actualizar datos de mascota
-- [ ] **DELETE** - Eliminar mascota
+- [x] **GET** - Obtener todas las mascotas
+- [x] **GET** - Obtener mascota por ID
+- [x] **POST** - Registrar nueva mascota
+- [x] **PUT** - Actualizar datos de mascota
+- [x] **DELETE** - Eliminar mascota
 
 #### Objetivos Adicionales (2 endpoints)
-- [ ] Búsqueda por raza
-- [ ] Búsqueda por estado (perdida/encontrada)
-- [ ] Totales de mascotas por estado
+- [x] Búsqueda por raza
+- [x] Búsqueda por estado (perdida/encontrada)
+- [x] Totales de mascotas por estado
 
 #### Base de Datos
-- [ ] Tabla: `pets` (id, name, race, color, size, status, description, photo_url, contact_id, created_at, updated_at)
-- [ ] Tabla: `contacts` (id, name, phone, email, address) - Relacionada con pets
-- [ ] Liquibase para creación de tablas y 10 registros
+- [x] Tabla: `pets` (id, name, race, color, size, status, description, photo_url, contact_id, created_at, updated_at)
+- [x] Tabla: `contacts` (id, name, phone, email, address) - Relacionada con pets
+- [x] Liquibase para creación de tablas y 10 registros
 
 #### Estructura Spring
-- [ ] PetController
-- [ ] PetService
-- [ ] PetRepository
-- [ ] Pet (Entity)
+- [x] PetController
+- [x] PetService
+- [x] PetRepository
+- [x] Pet (Entity)
 
 ---
 
 ### Etapa 3: Location Service (Semana 4)
 
 #### Objetivos CRUD
-- [ ] **GET** - Obtener todas las ubicaciones
-- [ ] **GET** - Obtener ubicación por ID
-- [ ] **POST** - Registrar nueva ubicación
-- [ ] **PUT** - Actualizar ubicación
-- [ ] **DELETE** - Eliminar ubicación
+- [x] **GET** - Obtener todas las ubicaciones
+- [x] **GET** - Obtener ubicación por ID
+- [x] **POST** - Registrar nueva ubicación
+- [x] **PUT** - Actualizar ubicación
+- [x] **DELETE** - Eliminar ubicación
 
 #### Objetivos Adicionales (2 endpoints)
-- [ ] Búsqueda por zona/barrio
-- [ ] Búsqueda por rango de fechas
-- [ ] Totales de reportes por zona
+- [x] Búsqueda por zona/barrio
+- [x] Búsqueda por rango de fechas
+- [x] Totales de reportes por zona
 
 #### Base de Datos
-- [ ] Tabla: `locations` (id, pet_id, latitude, longitude, zone, address, reported_at)
-- [ ] Tabla: `zones` (id, name, city, incidence_count) - Relacionada con locations
-- [ ] Liquibase para creación de tablas y 10 registros
+- [x] Tabla: `locations` (id, pet_id, latitude, longitude, zone, address, reported_at)
+- [x] Tabla: `zones` (id, name, city, incidence_count) - Relacionada con locations
+- [x] Liquibase para creación de tablas y 10 registros
 
 #### Estructura Spring
-- [ ] LocationController
-- [ ] LocationService
-- [ ] LocationRepository
-- [ ] Location (Entity)
+- [x] LocationController
+- [x] LocationService
+- [x] LocationRepository
+- [x] Location (Entity)
 
 ---
 
 ### Etapa 4: Matching Service (Semana 5)
 
 #### Objetivos CRUD
-- [ ] **GET** - Obtener todos los matches
-- [ ] **GET** - Obtener match por ID
-- [ ] **POST** - Crear match manualmente
-- [ ] **PUT** - Actualizar estado del match
-- [ ] **DELETE** - Eliminar match
+- [x] **GET** - Obtener todos los matches
+- [x] **GET** - Obtener match por ID
+- [x] **POST** - Crear match manualmente
+- [x] **PUT** - Actualizar estado del match
+- [x] **DELETE** - Eliminar match
 
 #### Objetivos Adicionales (2 endpoints)
-- [ ] Búsqueda por porcentaje de coincidencia
-- [ ] Búsqueda por estado (pendiente/confirmado)
-- [ ] Totales de matches por estado
+- [x] Búsqueda por porcentaje de coincidencia
+- [x] Búsqueda por estado (pendiente/confirmado)
+- [x] Totales de matches por estado
 
 #### Comunicación entre Microservicios
-- [ ] Consume Pet Service para obtener datos de mascotas
+- [x] Consume Pet Service para obtener datos de mascotas
 - [ ] Consume Location Service para obtener ubicaciones
-- [ ] Implementar cliente REST para comunicación
+- [x] Implementar cliente REST para comunicación
 
 #### Base de Datos
-- [ ] Tabla: `matches` (id, pet_lost_id, pet_found_id, match_percentage, status, created_at)
-- [ ] Tabla: `match_criteria` (id, match_id, criteria_name, score) - Relacionada con matches
+- [x] Tabla: `matches` (id, pet_lost_id, pet_found_id, match_percentage, status, created_at)
+- [x] Tabla: `match_criteria` (id, match_id, criteria_name, score) - Relacionada con matches
 
 ---
 
 ### Etapa 5: API Gateway e Integración (Semana 6)
 
 #### Objetivos
-- [ ] Configurar rutas en API Gateway para cada microservicio
+- [x] Configurar rutas en API Gateway para cada microservicio
 - [ ] Implementar balanceador de carga
 - [ ] Configurar fallbacks (circuit breaker)
 - [ ] Documentar endpoints
@@ -252,27 +252,27 @@ main
 | Requisito | Estado |
 |-----------|--------|
 | Propia base de datos | ✅ |
-| CRUD completo | ⬜ |
-| 2 endpoints adicionales | ⬜ |
-| Liquibase con 10+ registros | ⬜ |
-| Tablas relacionadas | ⬜ |
+| CRUD completo | ✅ |
+| 2 endpoints adicionales | ✅ |
+| Liquibase con 10+ registros | ✅ |
+| Tablas relacionadas | ✅ |
 
 ### Location Service
 | Requisito | Estado |
 |-----------|--------|
 | Propia base de datos | ✅ |
-| CRUD completo | ⬜ |
-| 2 endpoints adicionales | ⬜ |
-| Liquibase con 10+ registros | ⬜ |
-| Tablas relacionadas | ⬜ |
+| CRUD completo | ✅ |
+| 2 endpoints adicionales | ✅ |
+| Liquibase con 10+ registros | ✅ |
+| Tablas relacionadas | ✅ |
 
 ### Matching Service
 | Requisito | Estado |
 |-----------|--------|
 | Propia base de datos | ✅ |
-| CRUD completo | ⬜ |
-| 2 endpoints adicionales | ⬜ |
-| Comunica con 2 microservicios | ⬜ |
+| CRUD completo | ✅ |
+| 2 endpoints adicionales | ✅ |
+| Comunica con Pet Service | ✅ |
 
 ---
 
