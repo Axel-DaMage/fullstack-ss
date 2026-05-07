@@ -5,134 +5,203 @@ on:
     branches: [ master ]
   workflow_dispatch:
 
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-
 jobs:
-  build-and-push:
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-    steps:
-      - uses: actions/checkout@v4
 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          path: backend
+      
+      - name: Checkout Frontend code
+        uses: actions/checkout@v4
+        with:
+          repository: Axel-DaMage/fullstack-ss
+          ref: master
+          path: frontend
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm ci
+          npm run build
+      
+      - name: Copy Frontend to Backend static resources
+        run: |
+          mkdir -p backend/pet-service/src/main/resources/static
+          cp -r frontend/dist/* backend/pet-service/src/main/resources/static/
+          echo "Frontend copied to backend"
+      
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push Pet Service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend/pet-service
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/pet-service:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Geo Service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend/geo-service
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/geo-service:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Match Service
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend/match-service
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/match-service:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push BFF
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend/bff
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/bff:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push API Gateway
-        uses: docker/build-push-action@v5
-        with:
-          context: ./backend/api-gateway
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/api-gateway:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ env.REGISTRY }}/${{ github.actor }}/frontend:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/master'
-    steps:
-      - name: Deploy to Cloud (Example: AWS ECS)
+          cache: maven
+      
+      - name: Build Microservices
         run: |
-          echo "Deploying to production..."
-          echo "Images pushed to: ${{ env.REGISTRY }}/${{ github.actor }}/*"
-          # Add your deployment commands here
-          # Example: aws ecs update-service --cluster production --service pet-service
-
-      - name: Notify Deployment
-        if: always()
-        uses: slackapi/slack-github-action@v1.25.0
+          cd backend/pet-service && mvn clean package -DskipTests
+          cd ../geo-service && mvn clean package -DskipTests
+          cd ../match-service && mvn clean package -DskipTests
+          cd ../bff && mvn clean package -DskipTests
+          cd ../api-gateway && mvn clean package -DskipTests
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          payload: |
-            {
-              "text": "Deployment ${{ job.status }} for ${{ github.repository }}",
-              "blocks": [
-                {
-                  "type": "section",
-                  "text": {
-                    "type": "mrkdwn",
-                    "text": "*Deployment ${{ job.status }}*\nRepository: ${{ github.repository }}\nCommit: ${{ github.sha }}"
-                  }
-                }
-              ]
-            }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-
-  security-scan:
-    runs-on: ubuntu-latest
-    needs: build-and-push
-    steps:
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: 'fs'
-          scan-ref: './backend'
-          format: 'sarif'
-          output: 'trivy-results.sarif'
-
-      - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: 'trivy-results.sarif'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-region: us-east-1
+      
+      - name: Create S3 bucket
+        run: |
+          BUCKET_NAME="sanosysalvos-${{ secrets.AWS_ACCOUNT_ID }}"
+          aws s3 mb s3://${BUCKET_NAME} --region us-east-1 2>/dev/null || echo "Bucket already exists"
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+      
+      - name: Upload JARs to S3
+        run: |
+          BUCKET_NAME=${{ env.BUCKET_NAME }}
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          
+          # Upload each microservice
+          for service in pet-service geo-service match-service bff api-gateway; do
+            JAR_FILE=$(ls backend/$service/target/*.jar 2>/dev/null | grep -v original | head -1)
+            if [ -n "$JAR_FILE" ]; then
+              aws s3 cp $JAR_FILE s3://${BUCKET_NAME}/${service}-latest.jar --metadata "commit-sha=${{ github.sha }}"
+              echo "Uploaded $service: $JAR_FILE"
+            fi
+          done
+      
+      - name: Check for EC2 instance
+        id: check-ec2
+        run: |
+          INSTANCE_ID=$(aws ec2 describe-instances \
+            --filters "Name=tag:Name,Values=sanosysalvos-backend" \
+                      "Name=instance-state-name,Values=running" \
+            --query "Reservations[0].Instances[0].InstanceId" \
+            --output text 2>/dev/null || echo "None")
+          
+          if [ "$INSTANCE_ID" != "None" ] && [ ! -z "$INSTANCE_ID" ]; then
+            echo "instance-id=$INSTANCE_ID" >> $GITHUB_OUTPUT
+            echo "instance-exists=true" >> $GITHUB_OUTPUT
+            
+            PUBLIC_IP=$(aws ec2 describe-instances \
+              --instance-ids $INSTANCE_ID \
+              --query "Reservations[0].Instances[0].PublicIpAddress" \
+              --output text)
+            echo "public-ip=$PUBLIC_IP" >> $GITHUB_OUTPUT
+          else
+            echo "instance-exists=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Deploy to EC2
+        if: steps.check-ec2.outputs.instance-exists == 'true'
+        run: |
+          INSTANCE_ID="${{ steps.check-ec2.outputs.instance-id }}"
+          
+          # Create deployment script
+          cat > /tmp/deploy.sh << 'EOF'
+            #!/bin/bash
+            set -e
+            
+            S3_BUCKET="$1"
+            REGION="$2"
+            
+            # Download JARs
+            aws s3 cp s3://${S3_BUCKET}/pet-service-latest.jar /tmp/pet-service.jar --region ${REGION}
+            aws s3 cp s3://${S3_BUCKET}/geo-service-latest.jar /tmp/geo-service.jar --region ${REGION}
+            aws s3 cp s3://${S3_BUCKET}/match-service-latest.jar /tmp/match-service.jar --region ${REGION}
+            aws s3 cp s3://${S3_BUCKET}/bff-latest.jar /tmp/bff.jar --region ${REGION}
+            aws s3 cp s3://${S3_BUCKET}/api-gateway-latest.jar /tmp/api-gateway.jar --region ${REGION}
+            
+            # Create docker-compose
+            cat > /tmp/docker-compose.yml << 'DOCKER'
+            version: '3.8'
+            services:
+              pet-service:
+                image: openjdk:17
+                container_name: pet-service
+                ports:
+                  - "3001:3001"
+                volumes:
+                  - /tmp/pet-service.jar:/app/app.jar
+                command: java -jar /app/app.jar
+              geo-service:
+                image: openjdk:17
+                container_name: geo-service
+                ports:
+                  - "3002:3002"
+                volumes:
+                  - /tmp/geo-service.jar:/app/app.jar
+                command: java -jar /app/app.jar
+              match-service:
+                image: openjdk:17
+                container_name: match-service
+                ports:
+                  - "3003:3003"
+                volumes:
+                  - /tmp/match-service.jar:/app/app.jar
+                command: java -jar /app/app.jar
+              bff:
+                image: openjdk:17
+                container_name: bff
+                ports:
+                  - "8081:8081"
+                volumes:
+                  - /tmp/bff.jar:/app/app.jar
+                command: java -jar /app/app.jar
+              api-gateway:
+                image: openjdk:17
+                container_name: api-gateway
+                ports:
+                  - "8080:8080"
+                volumes:
+                  - /tmp/api-gateway.jar:/app/app.jar
+                command: java -jar /app/app.jar
+            DOCKER
+            
+            cd /tmp
+            docker compose up -d
+            echo "Deployment completed"
+          EOF
+          
+          # Send command via SSM
+          aws ssm send-command \
+            --instance-ids "$INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "commands=[
+              'chmod +x /tmp/deploy.sh',
+              '/tmp/deploy.sh ${{ env.BUCKET_NAME }} us-east-1'
+            ]" \
+            --region us-east-1
+      
+      - name: Deployment Summary
+        run: |
+          echo "================================"
+          echo "DEPLOYMENT SUMMARY"
+          echo "================================"
+          echo "S3 Bucket: ${{ env.BUCKET_NAME }}"
+          echo "Commit: ${{ github.sha }}"
+          echo ""
+          
+          if [ "${{ steps.check-ec2.outputs.instance-exists }}" == "true" ]; then
+            echo "EC2 Instance: ${{ steps.check-ec2.outputs.instance-id }}"
+            echo "Public IP: ${{ steps.check-ec2.outputs.public-ip }}"
+            echo "API Gateway: http://${{ steps.check-ec2.outputs.public-ip }}:8080"
+          else
+            echo "No EC2 instance running"
+            echo "Create EC2 with tag: Name=sanosysalvos-backend"
+          fi
