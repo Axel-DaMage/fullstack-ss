@@ -1,4 +1,4 @@
-name: CD - Pipeline de Despliegue
+name: CD / Deploy a AWS
 
 on:
   push:
