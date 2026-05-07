@@ -1,11 +1,9 @@
+[![CI / Compilacion y testing](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/ci.yml)
+[![CD / Deploy a AWS](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/cd.yml/badge.svg?style=for-the-badge)](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/cd.yml)
+
 # Sanos y Salvos - Sistema de Mascotas Perdidas
 
 Plataforma para gestionar el registro, busqueda y reencontracion de mascotas perdidas y encontradas.
-
-## Estado de Build
-
-[![CI / Compilacion y testing](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/ci.yml/badge.svg)](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/ci.yml)
-[![CD / Deploy a AWS](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/cd.yml/badge.svg)](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/cd.yml)
 
 ## Arquitectura
 
