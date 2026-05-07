@@ -152,36 +152,36 @@ Plataforma para gestionar el registro, búsqueda y reencontración de mascotas p
 ### Etapa 6: Frontend y BFF (Semana 7)
 
 #### BFF (Backend For Frontend)
-- [ ] Crear proyecto con arquetipo Maven
-- [ ] Implementar aggregation pattern
-- [ ] Exponer endpoints unificados para frontend
-- [ ] Gestionar comunicación con microservicios
+- [x] Crear proyecto con arquetipo Maven
+- [x] Implementar aggregation pattern
+- [x] Exponer endpoints unificados para frontend
+- [x] Gestionar comunicación con microservicios
 
 #### Frontend (NPM)
-- [ ] Componente para listar mascotas
-- [ ] Componente para registrar mascota
-- [ ] Componente para ver mapa de zonas
-- [ ] Componente para ver matches
-- [ ] Integración con BFF
+- [x] Componente para listar mascotas
+- [x] Componente para registrar mascota
+- [x] Componente para ver mapa de zonas
+- [x] Componente para ver matches
+- [x] Integración con BFF
 
 #### Patrones de Diseño Frontend
-- [ ] Observer (para estado de la aplicación)
-- [ ] Factory (para creación de componentes)
-- [ ] Singleton (para servicios API)
+- [x] Observer (para estado de la aplicación)
+- [x] Factory (para creación de componentes)
+- [x] Singleton (para servicios API)
 
 ---
 
 ### Etapa 7: Pruebas y Calidad (Semana 8)
 
 #### Objetivos
-- [ ] Implementar pruebas unitarias en cada microservicio
-- [ ] Implementar pruebas unitarias en BFF
+- [x] Implementar pruebas unitarias en cada microservicio
+- [x] Implementar pruebas unitarias en BFF
 - [ ] Implementar pruebas unitarias en componentes frontend
 - [ ] Documentar cobertura de código
 - [ ] Validar que todas las pruebas pasen
 
 #### Herramientas
-- [ ] JUnit para Java
+- [x] JUnit para Java
 - [ ] Jest para JavaScript/TypeScript
 
 ---
@@ -198,10 +198,10 @@ Plataforma para gestionar el registro, búsqueda y reencontración de mascotas p
 - [ ] ECS (orquestación)
 
 **Opción B - Docker Local:**
-- [ ] Contenedor Base de Datos
-- [ ] Contenedor BFF
-- [ ] Contenedor Microservicios
-- [ ] Contenedor Frontend
+- [x] Contenedor Base de Datos (3 DBs: pet, geo, match)
+- [x] Contenedor BFF
+- [x] Contenedor Microservicios
+- [x] Contenedor Frontend
 - [ ] Ejecutar en al menos 2 PCs distintos
 
 ---
