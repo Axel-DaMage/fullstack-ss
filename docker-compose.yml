@@ -1,23 +1,115 @@
 version: '3.8'
 
 services:
-  db:
+  # Pet Service Database
+  db-pet:
     image: mysql:8
-    container_name: ss-mysql
+    container_name: ss-db-pet
     environment:
       MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: sanosysalvos
-      MYSQL_USER: sanosysalvos
-      MYSQL_PASSWORD: sanosysalvos
+      MYSQL_DATABASE: petservice
+      MYSQL_USER: petuser
+      MYSQL_PASSWORD: petpass
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - db_pet_data:/var/lib/mysql
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
       timeout: 20s
       retries: 10
 
+  # Location Service Database
+  db-geo:
+    image: mysql:8
+    container_name: ss-db-geo
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: geoservice
+      MYSQL_USER: geouser
+      MYSQL_PASSWORD: geopass
+    ports:
+      - "3308:3306"
+    volumes:
+      - db_geo_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Match Service Database
+  db-match:
+    image: mysql:8
+    container_name: ss-db-match
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE:atchservice
+      MYSQL_USER: matchuser
+      MYSQL_PASSWORD: matchpass
+    ports:
+      - "3309:3306"
+    volumes:
+      - db_match_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Pet Service
+  pet-service:
+    build: ./backend/pet-service
+    container_name: ss-pet-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      db-pet:
+        condition: service_healthy
+    environment:
+      - PORT=3001
+      - DB_HOST=db-pet
+      - DB_PORT=3306
+      - DB_USER=petuser
+      - DB_PASS=petpass
+      - DB_NAME=petservice
+
+  # Geo/Location Service
+  geo-service:
+    build: ./backend/geo-service
+    container_name: ss-geo-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      db-geo:
+        condition: service_healthy
+    environment:
+      - PORT=3002
+      - DB_HOST=db-geo
+      - DB_PORT=3306
+      - DB_USER=geouser
+      - DB_PASS=geopass
+      - DB_NAME=geoservice
+
+  # Match Service
+  match-service:
+    build: ./backend/match-service
+    container_name: ss-match-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      db-match:
+        condition: service_healthy
+      pet-service:
+        condition: service_started
+    environment:
+      - PORT=3003
+      - DB_HOST=db-match
+      - DB_PORT=3306
+      - DB_USER=matchuser
+      - DB_PASS=matchpass
+      - DB_NAME=matchservice
+      - PET_SERVICE_URL=http://pet-service:3001
+
+  # API Gateway
   api-gateway:
     build: ./backend/api-gateway
     container_name: ss-api-gateway
@@ -29,44 +121,35 @@ services:
       - match-service
     environment:
       - PORT=8080
-      - PET_SERVICE_URL=http://pet-service:3001
-      - GEO_SERVICE_URL=http://geo-service:3002
-      - MATCH_SERVICE_URL=http://match-service:3003
 
-  pet-service:
-    build: ./backend/pet-service
-    container_name: ss-pet-service
+  # BFF Service
+  bff:
+    build: ./backend/bff
+    container_name: ss-bff
     ports:
-      - "3001:3001"
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      - PORT=3001
-      - DB_HOST=db
-      - DB_PORT=3306
-      - DB_USER=local_user
-      - DB_PASS=local_password
-      - DB_NAME=sanosysalvos
-
-  geo-service:
-    build: ./backend/geo-service
-    container_name: ss-geo-service
-    ports:
-      - "3002:3002"
-    environment:
-      - PORT=3002
-
-  match-service:
-    build: ./backend/match-service
-    container_name: ss-match-service
-    ports:
-      - "3003:3003"
+      - "8081:8081"
     depends_on:
       - pet-service
+      - geo-service
+      - match-service
     environment:
-      - PORT=3003
+      - PORT=8081
       - PET_SERVICE_URL=http://pet-service:3001
+      - LOCATION_SERVICE_URL=http://geo-service:3002
+      - MATCH_SERVICE_URL=http://match-service:3003
+
+  # Frontend
+  frontend:
+    build: ./frontend
+    container_name: ss-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8081/api
+    stdin_open: true
+    tty: true
 
 volumes:
-  mysql_data:
+  db_pet_data:
+  db_geo_data:
+  db_match_data:
