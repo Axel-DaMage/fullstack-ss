@@ -1,0 +1,94 @@
+# Repositorios del Proyecto Sistema de Mascotas Perdidas
+
+## Información General
+
+**Proyecto:** Sanos y Salvos - Sistema de Mascotas Perdidas
+**Organización:** Axel-DaMage
+**Descripción:** Plataforma para gestionar el registro, búsqueda y reencontración de mascotas perdidas y encontradas.
+
+---
+
+## Repositorios
+
+### Repositorio Principal
+```
+https://github.com/Axel-DaMage/fullstack-ss-parcial1
+```
+
+Este es el repositorio principal que contiene todo el código del proyecto.
+
+---
+
+## Estructura del Proyecto
+
+```
+fullstack-ss-parcial1/
+├── backend/
+│   ├── api-gateway/          # API Gateway con Spring Cloud
+│   ├── pet-service/          # Microservicio de mascotas
+│   ├── geo-service/          # Microservicio de geolocalización
+│   ├── match-service/        # Microservicio de matches
+│   ├── bff/                  # Backend For Frontend
+│   └── archetypes/            # Arquetipos Maven
+│       ├── bff/              # Arquetipo BFF
+│       └── microservice/     # Arquetipo Microservicio
+├── frontend/                  # Aplicación React principal
+├── frontend-components/       # Componentes NPM
+└── documentacion/             # Documentación del proyecto
+```
+
+---
+
+## Microservicios
+
+### Pet Service
+- **Puerto:** 8081
+- **Funcionalidad:** Gestión de mascotas (CRUD)
+- **DB:** MySQL (pet_service)
+
+### Geo Service
+- **Puerto:** 8082
+- **Funcionalidad:** Geolocalización y zonas
+- **DB:** MySQL (geo_service)
+
+### Match Service
+- **Puerto:** 8083
+- **Funcionalidad:** Motor de coincidencias
+- **DB:** MySQL (match_service)
+
+### BFF
+- **Puerto:** 8084
+- **Funcionalidad:** Agregación de datos para frontend
+
+### API Gateway
+- **Puerto:** 8080
+- **Funcionalidad:** Routing y resiliencia
+
+---
+
+## Componentes Frontend
+
+### Frontend Principal
+- **Tech:** React + TypeScript + Vite
+- **Puerto:** 3000
+
+### Frontend Components
+- **Tech:** TypeScript + React
+- **Propósito:** Paquete NPM de componentes reutilizables
+
+---
+
+## Contribuidores
+
+- Axel-DaMage (Desarrollador principal)
+
+---
+
+## Notas
+
+Para clonar el repositorio:
+```bash
+git clone https://github.com/Axel-DaMage/fullstack-ss-parcial1.git
+```
+
+Para más información, ver la documentación en la carpeta `documentacion/`.
