@@ -1,9 +1,11 @@
 package com.sanosysalvos.matchservice.service;
 
 import com.sanosysalvos.matchservice.client.PetServiceClient;
+import com.sanosysalvos.matchservice.client.LocationServiceClient;
 import com.sanosysalvos.matchservice.model.Match;
 import com.sanosysalvos.matchservice.model.MatchCriteria;
 import com.sanosysalvos.matchservice.model.PetDto;
+import com.sanosysalvos.matchservice.model.LocationDto;
 import com.sanosysalvos.matchservice.repository.MatchCriteriaRepository;
 import com.sanosysalvos.matchservice.repository.MatchRepository;
 import org.springframework.stereotype.Service;
@@ -18,13 +20,16 @@ public class MatchingService {
     private final MatchRepository matchRepository;
     private final MatchCriteriaRepository matchCriteriaRepository;
     private final PetServiceClient petServiceClient;
+    private final LocationServiceClient locationServiceClient;
 
     public MatchingService(MatchRepository matchRepository,
                           MatchCriteriaRepository matchCriteriaRepository,
-                          PetServiceClient petServiceClient) {
+                          PetServiceClient petServiceClient,
+                          LocationServiceClient locationServiceClient) {
         this.matchRepository = matchRepository;
         this.matchCriteriaRepository = matchCriteriaRepository;
         this.petServiceClient = petServiceClient;
+        this.locationServiceClient = locationServiceClient;
     }
 
     public List<Match> getAllMatches() {
@@ -121,6 +126,15 @@ public class MatchingService {
 
     public long countMatchesByStatus(String status) {
         return matchRepository.countByStatus(status);
+    }
+
+    public LocationDto getLocationByPetId(Long petId) {
+        List<LocationDto> locations = locationServiceClient.getLocationsByPetId(petId);
+        return locations.isEmpty() ? null : locations.get(0);
+    }
+
+    public List<LocationDto> getAllLocations() {
+        return locationServiceClient.getAllLocations();
     }
 
     public void runAutomaticMatching() {
