@@ -93,3 +93,11 @@ Para cada microservicio implementar **2 de los siguientes endpoints**:
 1. Para un microservicio utilizar **Flyway**.
 2. Implementar pipeline **CI/CD** desde GitHub.
 3. Implementar **JWT** que se extienda a los microservicios.
+
+## Ajustes a Realizar
+
+1. Cambiar esquema SQL
+2. Personalizar datos SQL
+3. Dividir proyecto en repositorios
+4. Realizar CI/CD por repositorios 
+5. Implementar Gitflow
