@@ -1,4 +1,4 @@
-# Informe de Arquitectura y Patrones: Sanos y Salvos (Parcial 1)
+# Informe de Arquitectura y Patrones: Sanos y Salvos
 
 ## 1. Propuesta de Arquitectura
 
@@ -43,3 +43,15 @@ Se han implementado y justificado los siguientes estándares de la industria obl
 ### C. Circuit Breaker Pattern
 * **Ubicación:** `Match Service` (`PetServiceConsumer.java` vía *Resilience4j*)
 * **Justificación:** Puesto que el Motor de Matches obtiene la información mandando una petición HTTP al *Pet Service*, existe un alto riesgo latente: Si MySQL cae o el Pet Service pierde la red, el Match Service se quedaría esperando hasta saturarse y colapsaría. El *Circuit Breaker* envuelve esa llamada; si ocurre una falla sostenida, abre el circuito e intercepta las futuras llamadas para proteger el servidor y retornar una ruta segura de "Fallo Controlado - Intente de nuevo más tarde", previniendo fracasos en cascada entre microservicios.
+
+### D. Observer Pattern (Frontend)
+* **Ubicación:** `Frontend` (`EventEmitter.ts`, `useEvent.ts`, componentes)
+* **Justificación:** El frontend necesita mantener sincronizadas múltiples vistas (Dashboard, PetsList, MatchesList) cuando ocurren cambios. El patrón Observer permite que los componentes se comuniquen sin acoplamiento directo. PetsList emite eventos (PET_CREATED, PET_UPDATED, PET_DELETED) y Dashboard escucha estos eventos para actualizarse automáticamente. Esto sigue el principio **Open/Closed** y reduce el acoplamiento entre componentes.
+
+### E. Aggregation Pattern (BFF)
+* **Ubicación:** `BFF` (`AggregationService.java`)
+* **Justificación:** El Backend For Frontend actúa como聚合层 (capa de agregación) que consolida datos de múltiples microservicios (Pet, Geo, Match) en respuestas unificadas. El patrón Aggregation permite al frontend realizar una sola llamada al BFF en lugar de múltiples llamadas a cada servicio. Implementa también el patrón **Facade**, proporcionando una interfaz simplificada al frontend.
+
+### F. Factory Pattern (Pet Service -扩展)
+* **Ubicación:** `Pet Service` (`PetFactory.java`)
+* **Justificación:** Además del PetReportFactory, se implementó PetFactory para la creación de mascotas con métodos especializados como `createLostPet()` y `createFoundPet()`. Esto centraliza las reglas de negocio para la creación de entidades y facilita la extensión futura sin modificar el código existente (Principio Open/Closed de SOLID).
