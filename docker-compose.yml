@@ -55,6 +55,13 @@ services:
       timeout: 20s
       retries: 10
 
+  # Eureka Server
+  eureka-server:
+    build: ./backend/eureka-server
+    container_name: ss-eureka-server
+    ports:
+      - "8761:8761"
+
   # Pet Service
   pet-service:
     build: ./backend/pet-service
@@ -64,6 +71,8 @@ services:
     depends_on:
       db-pet:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
     environment:
       - PORT=3001
       - DB_HOST=db-pet
@@ -81,6 +90,8 @@ services:
     depends_on:
       db-geo:
         condition: service_healthy
+      eureka-server:
+        condition: service_started
     environment:
       - PORT=3002
       - DB_HOST=db-geo
@@ -99,6 +110,8 @@ services:
       db-match:
         condition: service_healthy
       pet-service:
+        condition: service_started
+      eureka-server:
         condition: service_started
     environment:
       - PORT=3003
@@ -119,6 +132,7 @@ services:
       - pet-service
       - geo-service
       - match-service
+      - eureka-server
     environment:
       - PORT=8080
 
@@ -132,6 +146,7 @@ services:
       - pet-service
       - geo-service
       - match-service
+      - eureka-server
     environment:
       - PORT=8081
       - PET_SERVICE_URL=http://pet-service:3001
