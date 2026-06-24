@@ -1,0 +1,47 @@
+version: '3.8'
+services:
+  pet-service:
+    image: openjdk:17
+    container_name: pet-service
+    ports:
+      - "3001:3001"
+    volumes:
+      - /tmp/pet-service.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    restart: unless-stopped
+  geo-service:
+    image: openjdk:17
+    container_name: geo-service
+    ports:
+      - "3002:3002"
+    volumes:
+      - /tmp/geo-service.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    restart: unless-stopped
+  match-service:
+    image: openjdk:17
+    container_name: match-service
+    ports:
+      - "3003:3003"
+    volumes:
+      - /tmp/match-service.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    restart: unless-stopped
+  bff:
+    image: openjdk:17
+    container_name: bff
+    ports:
+      - "8081:8081"
+    volumes:
+      - /tmp/bff.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    restart: unless-stopped
+  api-gateway:
+    image: openjdk:17
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    volumes:
+      - /tmp/api-gateway.jar:/app/app.jar
+    command: java -jar /app/app.jar
+    restart: unless-stopped

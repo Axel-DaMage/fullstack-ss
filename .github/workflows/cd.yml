@@ -18,8 +18,8 @@ jobs:
       - name: Checkout Frontend code
         uses: actions/checkout@v4
         with:
-          repository: Axel-DaMage/fullstack-ss
-          ref: master
+          repository: Axel-DaMage/fullstack-ss-frontend
+          ref: main
           path: frontend
           token: ${{ secrets.GITHUB_TOKEN }}
       
@@ -112,81 +112,27 @@ jobs:
         run: |
           INSTANCE_ID="${{ steps.check-ec2.outputs.instance-id }}"
           
-          # Create deployment script
-          cat > /tmp/deploy.sh << 'EOF'
-            #!/bin/bash
-            set -e
-            
-            S3_BUCKET="$1"
-            REGION="$2"
-            
-            # Download JARs
-            aws s3 cp s3://${S3_BUCKET}/pet-service-latest.jar /tmp/pet-service.jar --region ${REGION}
-            aws s3 cp s3://${S3_BUCKET}/geo-service-latest.jar /tmp/geo-service.jar --region ${REGION}
-            aws s3 cp s3://${S3_BUCKET}/match-service-latest.jar /tmp/match-service.jar --region ${REGION}
-            aws s3 cp s3://${S3_BUCKET}/bff-latest.jar /tmp/bff.jar --region ${REGION}
-            aws s3 cp s3://${S3_BUCKET}/api-gateway-latest.jar /tmp/api-gateway.jar --region ${REGION}
-            
-            # Create docker-compose
-            cat > /tmp/docker-compose.yml << 'DOCKER'
-            version: '3.8'
-            services:
-              pet-service:
-                image: openjdk:17
-                container_name: pet-service
-                ports:
-                  - "3001:3001"
-                volumes:
-                  - /tmp/pet-service.jar:/app/app.jar
-                command: java -jar /app/app.jar
-              geo-service:
-                image: openjdk:17
-                container_name: geo-service
-                ports:
-                  - "3002:3002"
-                volumes:
-                  - /tmp/geo-service.jar:/app/app.jar
-                command: java -jar /app/app.jar
-              match-service:
-                image: openjdk:17
-                container_name: match-service
-                ports:
-                  - "3003:3003"
-                volumes:
-                  - /tmp/match-service.jar:/app/app.jar
-                command: java -jar /app/app.jar
-              bff:
-                image: openjdk:17
-                container_name: bff
-                ports:
-                  - "8081:8081"
-                volumes:
-                  - /tmp/bff.jar:/app/app.jar
-                command: java -jar /app/app.jar
-              api-gateway:
-                image: openjdk:17
-                container_name: api-gateway
-                ports:
-                  - "8080:8080"
-                volumes:
-                  - /tmp/api-gateway.jar:/app/app.jar
-                command: java -jar /app/app.jar
-            DOCKER
-            
-            cd /tmp
-            docker compose up -d
-            echo "Deployment completed"
-          EOF
-          
-          # Send command via SSM
-          aws ssm send-command \
+          COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=[
-              'chmod +x /tmp/deploy.sh',
-              '/tmp/deploy.sh ${{ env.BUCKET_NAME }} us-east-1'
-            ]" \
-            --region us-east-1
+            --parameters 'commands=[
+              "set -e",
+              "S3_BUCKET=${{ env.BUCKET_NAME }}",
+              "REGION=us-east-1",
+              "aws s3 cp s3://${S3_BUCKET}/pet-service-latest.jar /tmp/pet-service.jar --region ${REGION}",
+              "aws s3 cp s3://${S3_BUCKET}/geo-service-latest.jar /tmp/geo-service.jar --region ${REGION}",
+              "aws s3 cp s3://${S3_BUCKET}/match-service-latest.jar /tmp/match-service.jar --region ${REGION}",
+              "aws s3 cp s3://${S3_BUCKET}/bff-latest.jar /tmp/bff.jar --region ${REGION}",
+              "aws s3 cp s3://${S3_BUCKET}/api-gateway-latest.jar /tmp/api-gateway.jar --region ${REGION}",
+              "curl -fsSL -o /tmp/docker-compose.yml https://raw.githubusercontent.com/Axel-DaMage/fullstack-ss/master/docker-compose.prod.yml",
+              "cd /tmp",
+              "docker compose up -d",
+              "echo \"Deployment completed\""
+            ]' \
+            --region us-east-1 \
+            --output text \
+            --query 'Command.CommandId')
+          echo "SSM command sent: $COMMAND_ID"
       
       - name: Deployment Summary
         run: |
