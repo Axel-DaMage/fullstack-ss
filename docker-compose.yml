@@ -1,6 +1,15 @@
 version: '3.8'
 
 services:
+  # Eureka Service Discovery
+  eureka-server:
+    build: ../fullstack-ss-eureka-server
+    container_name: ss-eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - PORT=8761
+
   # Pet Service Database
   db-pet:
     image: mysql:8
@@ -62,6 +71,8 @@ services:
     ports:
       - "3001:3001"
     depends_on:
+      eureka-server:
+        condition: service_started
       db-pet:
         condition: service_healthy
     environment:
@@ -79,6 +90,8 @@ services:
     ports:
       - "3002:3002"
     depends_on:
+      eureka-server:
+        condition: service_started
       db-geo:
         condition: service_healthy
     environment:
@@ -96,6 +109,8 @@ services:
     ports:
       - "3003:3003"
     depends_on:
+      eureka-server:
+        condition: service_started
       db-match:
         condition: service_healthy
       pet-service:
@@ -116,6 +131,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
+      - eureka-server
       - pet-service
       - geo-service
       - match-service
@@ -129,6 +145,7 @@ services:
     ports:
       - "8081:8081"
     depends_on:
+      - eureka-server
       - pet-service
       - geo-service
       - match-service

@@ -1,5 +1,12 @@
 version: '3.8'
 services:
+  eureka-server:
+    image: axeldamage/fullstack-ss-eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    restart: unless-stopped
+
   pet-service:
     image: openjdk:17
     container_name: pet-service
