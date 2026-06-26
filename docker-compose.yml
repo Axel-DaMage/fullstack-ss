@@ -77,6 +77,7 @@ services:
         condition: service_healthy
     environment:
       - PORT=3001
+      - EUREKA_URL=http://eureka-server:8761/eureka/
       - DB_HOST=db-pet
       - DB_PORT=3306
       - DB_USER=petuser
@@ -96,6 +97,7 @@ services:
         condition: service_healthy
     environment:
       - PORT=3002
+      - EUREKA_URL=http://eureka-server:8761/eureka/
       - DB_HOST=db-geo
       - DB_PORT=3306
       - DB_USER=geouser
@@ -117,12 +119,14 @@ services:
         condition: service_started
     environment:
       - PORT=3003
+      - EUREKA_URL=http://eureka-server:8761/eureka/
       - DB_HOST=db-match
       - DB_PORT=3306
       - DB_USER=matchuser
       - DB_PASS=matchpass
       - DB_NAME=matchservice
       - PET_SERVICE_URL=http://pet-service:3001
+      - LOCATION_SERVICE_URL=http://geo-service:3002
 
   # API Gateway
   api-gateway:
@@ -137,6 +141,7 @@ services:
       - match-service
     environment:
       - PORT=8080
+      - EUREKA_URL=http://eureka-server:8761/eureka/
 
   # BFF Service
   bff:
@@ -151,6 +156,7 @@ services:
       - match-service
     environment:
       - PORT=8081
+      - EUREKA_URL=http://eureka-server:8761/eureka/
       - PET_SERVICE_URL=http://pet-service:3001
       - LOCATION_SERVICE_URL=http://geo-service:3002
       - MATCH_SERVICE_URL=http://match-service:3003
