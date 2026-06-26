@@ -1,87 +1,113 @@
-[![CI / Compilacion y testing](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/ci.yml/badge.svg?style=for-the-badge)](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/ci.yml)
-[![CD / Deploy a AWS](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/cd.yml/badge.svg?style=for-the-badge)](https://github.com/Axel-DaMage/fullstack-ss/actions/workflows/cd.yml)
+# Sanos y Salvos — Sistema de Mascotas Perdidas
 
-# Sanos y Salvos - Sistema de Mascotas Perdidas
-
-Plataforma para gestionar el registro, busqueda y reencontracion de mascotas perdidas y encontradas.
+Plataforma para gestionar el registro, busqueda y reencuentro de mascotas perdidas y encontradas. Arquitectura de microservicios con frontend React, API Gateway, BFF y 3 microservicios independientes con base de datos propia.
 
 ## Arquitectura
 
 ```
-Frontend (NPM)
-     |
-  API Gateway
-     |
- +----+----+----+
- |    |    |    |
-Pet  Geo Match BFF
- |    |    |
- BD  BD   BD
+Usuario
+   |
+Frontend (React + Nginx :80)
+   | /api/*
+API Gateway (Spring Cloud Gateway :8080)
+   | JWT Auth + Circuit Breaker + Retry
+   +----+----+----+----+
+   |    |    |    |    |
+  BFF  Pet  Geo  Match
+(:8081)(:3001)(:3002)(:3003)
+   |    |    |    |
+  MySQL MySQL MySQL
+ (3306)(3307)(3308)
 ```
+
+## CI/CD Pipeline
+
+```
+GitHub Repo → GitHub Actions → Build Docker Image → Docker Hub (d4mag3/) → AWS EC2 (docker-compose)
+```
+
+Cada repositorio tiene su propio `docker.yml`. Push a `main` → build automatico → push a Docker Hub → EC2 hace `docker-compose pull && up -d`.
 
 ## Microservicios
 
-| Servicio | Puerto | Descripcion |
-|----------|--------|--------------|
-| Pet Service | 3001 | Gestion de mascotas |
-| Geo Service | 3002 | Geolocalizacion |
-| Match Service | 3003 | Motor de coincidencias |
-| BFF | 8081 | Backend for Frontend |
-| API Gateway | 8080 | Punto de entrada |
+| Servicio | Puerto | Stack | Docker Hub |
+|----------|--------|-------|------------|
+| **Frontend** | 80 (Nginx) | React 18 + TypeScript + Vite | `d4mag3/frontend` |
+| **API Gateway** | 8080 | Spring Cloud Gateway + JWT + Resilience4j | `d4mag3/api-gateway` |
+| **BFF** | 8081 | Spring Boot + RestTemplate | `d4mag3/bff` |
+| **Pet Service** | 3001 | Spring Boot + JPA + Liquibase | `d4mag3/pet-service` |
+| **Geo Service** | 3002 | Spring Boot + JPA + Liquibase | `d4mag3/geo-service` |
+| **Match Service** | 3003 | Spring Boot + JPA + Liquibase | `d4mag3/match-service` |
+| **Eureka Server** | 8761 | Spring Cloud Netflix | `d4mag3/eureka-server` |
 
-## Tech Stack
+## Bases de Datos
 
-- Java 17 + Spring Boot
-- Maven
-- React + TypeScript
-- MySQL
-- Liquibase
-- Docker
+Cada microservicio tiene su propia base MySQL:
 
-## Estructura
+| Base | Tablas | Puerto |
+|------|--------|--------|
+| `pet_service` | pets, contacts, pet_report | 3306 |
+| `geo_service` | locations, zones | 3307 |
+| `match_service` | matches, match_criteria | 3308 |
 
-```
-backend/
-  pet-service/    # Microservicio de mascotas
-  geo-service/    # Microservicio de ubicaciones
-  match-service/  # Microservicio de coincidencias
-  bff/            # Backend for Frontend
-  api-gateway/    # API Gateway
+## Requisitos
 
-frontend/
-  src/components/ # Componentes NPM
-```
+- Docker y Docker Compose
+- Java 17+ (desarrollo)
+- Node.js 18+ (desarrollo frontend)
 
-## Primeros Pasos
+## Inicio Rapido
 
-### Con Docker
+### Con Docker Compose (produccion local)
 
 ```bash
 docker compose up --build
 ```
 
-### Desarrollo
+### Desarrollo — Backend
 
 ```bash
-# Backend
-cd backend/pet-service
-mvn spring-boot:run
+# Cada microservicio individualmente
+cd fullstack-ss-pet-service
+mvn clean spring-boot:run
 ```
 
+### Desarrollo — Frontend
+
 ```bash
-# Frontend
-cd frontend
+cd fullstack-ss-frontend
 npm install
 npm run dev
 ```
 
-## Endpoints
+## Pruebas
 
-- `/api/pets` - Mascotas
-- `/api/locations` - Ubicaciones
-- `/api/matching` - Coincidencias
+### Backend (cada microservicio)
 
-## GitHub Actions
+```bash
+mvn clean test           # solo pruebas
+mvn clean verify         # pruebas + reporte JaCoCo
+# Reporte: target/site/jacoco/index.html
+```
 
-- CI: Compila y ejecuta tests en cada push
-- CD: Despliega a AWS en push a master
+### Frontend
+
+```bash
+npx vitest run                    # solo pruebas
+npx vitest run --coverage         # pruebas + cobertura
+# Reporte: coverage/index.html
+```
+
+**Total: 125 tests en 18 archivos de prueba.**
+
+## Repositorios
+
+| Componente | URL |
+|------------|-----|
+| Frontend | https://github.com/Axel-DaMage/fullstack-ss-frontend |
+| BFF | https://github.com/Axel-DaMage/fullstack-ss-bff |
+| Pet Service | https://github.com/Axel-DaMage/fullstack-ss-pet-service |
+| Geo Service | https://github.com/Axel-DaMage/fullstack-ss-geo-service |
+| Match Service | https://github.com/Axel-DaMage/fullstack-ss-match-service |
+| API Gateway | https://github.com/Axel-DaMage/fullstack-ss-api-gateway |
+| Docker Compose | https://github.com/Axel-DaMage/fullstack-ss |
